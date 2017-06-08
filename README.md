@@ -1,5 +1,9 @@
 # camo [![Build Status](https://travis-ci.org/atmos/camo.svg?branch=master)](https://travis-ci.org/atmos/camo)
 
+**Modistry fork notes**: Switches the HMAC from a hex SHA-1 to a base64 SHA-256.
+This breaks the tests. Can't be bothered to fix them, I don't know Ruby. Using this
+from a Java server.
+
 Camo is all about making insecure assets look secure.  This is an SSL image proxy to prevent mixed content warnings on secure pages served from [GitHub](https://github.com).
 
 ![camo](https://cloud.githubusercontent.com/assets/38/24514552/88f29edc-1529-11e7-832f-6d2942144c87.gif)

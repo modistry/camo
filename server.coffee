@@ -191,12 +191,10 @@ process_url = (url, transferredHeaders, resp, remaining_redirects) ->
   else
     four_oh_four(resp, "No host found " + url.host, url)
 
-# decode a string of two char hex digits
-hexdec = (str) ->
-  if str and str.length > 0 and str.length % 2 == 0 and not str.match(/[^0-9a-f]/)
-    buf = new Buffer(str.length / 2)
-    for i in [0...str.length] by 2
-      buf[i/2] = parseInt(str[i..i+1], 16)
+# decode a base64 string
+b64dec = (str) ->
+  if str and str.length > 0 and not str.match(/[^ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_~]/)
+    buf = new Buffer(str.replace(/-/g, '+').replace(/_/g, '/').replace(/~/g, '='), 'base64')
     buf.toString()
 
 server = Http.createServer (req, resp) ->
@@ -228,7 +226,7 @@ server = Http.createServer (req, resp) ->
     delete(req.headers.cookie)
 
     [query_digest, encoded_url] = url.pathname.replace(/^\//, '').split("/", 2)
-    if encoded_url = hexdec(encoded_url)
+    if encoded_url = b64dec(encoded_url)
       url_type = 'path'
       dest_url = encoded_url
     else
@@ -247,14 +245,14 @@ server = Http.createServer (req, resp) ->
       return four_oh_four(resp, "Requesting from self")
 
     if url.pathname? && dest_url
-      hmac = Crypto.createHmac("sha1", shared_key)
+      hmac = Crypto.createHmac("sha256", shared_key)
 
       try
         hmac.update(dest_url, 'utf8')
       catch error
         return four_oh_four(resp, "could not create checksum")
 
-      hmac_digest = hmac.digest('hex')
+      hmac_digest = hmac.digest('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '~')
 
       if hmac_digest == query_digest
         url = Url.parse dest_url
